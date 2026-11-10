@@ -1,58 +1,85 @@
-import * as THREE from "three"
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/Addons.js';
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
-camera.position.set(6, 5, 8);
-camera.lookAt(0, 0, 0);
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(innerWidth, innerHeight);
-document.body.appendChild(renderer.domElement);
-const controls = new OrbitControls(camera, renderer.domElement);
-
-//floor(plane)
-const n = new THREE.Vector3(0, 1, 0);
-const p0 = new THREE.Vector3(0, 0, 0);
-const d = n.dot(p0);
-
-const geometry = new THREE.PlaneGeometry(12, 12);
-const material = new THREE.MeshBasicMaterial({ color: 0x2a3140})
-const floor = new THREE.Mesh(geometry, material);
-floor.rotation.x = -Math.PI / 2;
-floor.updateMatrixWorld(true);
-const grid = new THREE.GridHelper(12, 12);
-scene.add(floor, grid);
-
-//ray 
-const o = new THREE.Vector3(2, 5, 1);
-const dir = new THREE.Vector3(0.3 , -1, 0.1).normalize();
-
-//formula 
-const t = (d - n.dot(o)) / n.dot(dir);
-const hit = o.clone().addScaledVector(dir, t);
-
-//ray
-scene.add(new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([o, hit]),
-    new THREE.MeshBasicMaterial({ color: 0xff4422 })
-));
-
-const dot = new THREE.Mesh(
-    new THREE.SphereGeometry(0.18),
-    new THREE.MeshBasicMaterial({ color: 0xffd700 })
+const scene = new THREE.Scene()
+const camera = new THREE.PerspectiveCamera(
+75,
+window.innerWidth / window.innerHeight,
+0.1,
+100
 )
-dot.position.copy(hit);
-scene.add(dot);
+camera.position.set(5, 6, 7)
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight)
+document.body.appendChild(renderer.domElement)
+const pointLight = new THREE.PointLight(0xffffff, 400, 0, 1.6)
+const ambientLight = new THREE.AmbientLight(0xffffff, 2.3)
+scene.add(pointLight, ambientLight)
 
-//Compare with RayCaster
-const raycaster = new THREE.Raycaster(o, dir).intersectObject(floor)[0];
-console.log('Our Formula',hit.toArray().map(x => x.toFixed(3)));
-console.log('RayCaster',raycaster.point.toArray().map(x => x.toFixed(3)));
+const geometry = new THREE.SphereGeometry(2, 32, 24);
+const material = new THREE.MeshStandardMaterial({ color: 0x75c518, emissive: 0xE8431c, emissiveIntensity: 0.6 })
+const sun = new THREE.Mesh(geometry, material)
+scene.add(sun)
 
+const earthOrbit = new THREE.Object3D();
+sun.add(earthOrbit)
+// earthOrbit.add(new THREE.AxesHelper(7))
 
+const earth = new THREE.Mesh(
+new THREE.SphereGeometry(0.8, 32, 24),
+new THREE.MeshStandardMaterial({ color: 0X1E40FF, roughness: 0.9 })
+)
+earth.position.x = 6
+earthOrbit.add(earth)
+// earth.add(new THREE.AxesHelper(7))
+
+const moonOrbit = new THREE.Object3D();
+earth.add(moonOrbit)
+const moon = new THREE.Mesh(
+new THREE.SphereGeometry(0.25, 32, 24),
+new THREE.MeshStandardMaterial({ color: 0x134661 })
+)
+moon.position.x = 1.8;
+moonOrbit.add(moon)
+
+const marsOrbit = new THREE.Object3D();
+sun.add(marsOrbit)
+// marsOrbit.add(new THREE.AxesHelper(5))
+const mars = new THREE.Mesh(
+new THREE.SphereGeometry(0.8, 32, 24),
+new THREE.MeshStandardMaterial({ color: 0xbb3e04 })
+)
+mars.position.x = 10
+marsOrbit.add(mars)
+
+const phobosOrbit = new THREE.Object3D();
+mars.add(phobosOrbit)
+const phobos = new THREE.Mesh(
+new THREE.SphereGeometry(0.25, 32, 24),
+new THREE.MeshStandardMaterial({ color: 0x134661 })
+)
+phobos.position.x = 1.8
+phobosOrbit.add(phobos)
+
+const control = new OrbitControls(camera, renderer.domElement);
 function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
+requestAnimationFrame(animate)
+control.update()
+earthOrbit.rotation.y += 0.01
+
+moonOrbit.rotation.y += 0.04
+earth.rotation.y += 0.05
+
+marsOrbit.rotation.y += 0.006
+mars.rotation.y += 0.03
+phobosOrbit.rotation.y += 0.06
+sun.rotation.y += 0.003
+renderer.render(scene, camera)
 }
-animate();
+animate()
+
+addEventListener('resize', () => {
+camera.aspect = innerWidth / innerHeight
+camera.updateProjectionMatrix()
+renderer.setSize(innerWidth, innerHeight)
+})
